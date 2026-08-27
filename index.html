@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#07111f" />
+  <title>Inventory Leads · Prospección B2B</title>
+  <style>
+    :root{--bg:#07111f;--panel:#0d1b2d;--panel2:#11233a;--line:#203650;--text:#eef6ff;--muted:#8fa9c5;--green:#28d17c;--amber:#ffbf47;--red:#ff6b6b;--blue:#4ea3ff;--shadow:0 18px 60px rgba(0,0,0,.25)}
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 15% -10%,#153b61 0,transparent 35%),var(--bg);color:var(--text);min-height:100vh}
+    button,input,select{font:inherit} a{color:inherit}.shell{max-width:1280px;margin:auto;padding:24px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:28px}.brand{display:flex;gap:14px;align-items:center}.logo{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#31d68b,#2f7ef8);display:grid;place-items:center;font-weight:900;color:#03111c;box-shadow:0 8px 28px rgba(47,126,248,.25)}h1{font-size:22px;margin:0}.subtitle{font-size:13px;color:var(--muted);margin-top:4px}.badge{padding:8px 12px;border:1px solid var(--line);border-radius:999px;color:#a9bfd6;background:rgba(255,255,255,.03);font-size:12px}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}.stat{background:linear-gradient(180deg,rgba(17,35,58,.96),rgba(10,25,42,.96));border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow)}.stat span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.stat strong{display:block;font-size:30px;margin-top:8px}.stat small{color:#6f8aa8}
+    .toolbar{display:grid;grid-template-columns:1.6fr repeat(3,.7fr);gap:10px;margin-bottom:16px}.control{width:100%;border:1px solid var(--line);background:#0c1a2b;color:var(--text);border-radius:12px;padding:12px 14px;outline:none}.control:focus{border-color:#3d87d9}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{border:1px solid var(--line);background:linear-gradient(180deg,#0f2034,#0b192a);border-radius:20px;padding:18px;box-shadow:var(--shadow);position:relative;overflow:hidden}.card:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--score-color)}.cardhead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.company{font-size:19px;font-weight:800}.meta{color:var(--muted);font-size:13px;margin-top:4px}.score{font-weight:900;font-size:20px;color:var(--score-color);white-space:nowrap}.chips{display:flex;flex-wrap:wrap;gap:7px;margin:14px 0}.chip{background:#14283f;border:1px solid #233d59;color:#b8cce1;border-radius:999px;padding:6px 9px;font-size:11px}.signal{background:rgba(40,209,124,.07);border:1px solid rgba(40,209,124,.22);border-radius:12px;padding:11px 12px;font-size:13px;line-height:1.4;margin:10px 0}.contact{display:grid;gap:6px;margin:12px 0;font-size:13px}.contact b{color:#cfe0f2}.muted{color:var(--muted)}.actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}.btn{border:1px solid #284767;background:#122740;color:var(--text);padding:9px 11px;border-radius:10px;text-decoration:none;cursor:pointer;font-size:12px}.btn.primary{background:#2f7ef8;border-color:#2f7ef8}.btn:hover{filter:brightness(1.12)}.empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:50px;border:1px dashed var(--line);border-radius:18px}
+    dialog{width:min(760px,calc(100% - 28px));background:#0b192a;border:1px solid var(--line);color:var(--text);border-radius:20px;padding:0;box-shadow:0 30px 90px rgba(0,0,0,.5)}dialog::backdrop{background:rgba(2,8,14,.78);backdrop-filter:blur(4px)}.modal{padding:22px}.modalhead{display:flex;justify-content:space-between;align-items:start;gap:14px}.close{border:0;background:#14283f;color:#fff;border-radius:10px;width:34px;height:34px;cursor:pointer}.section{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}.section h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:#8fa9c5;margin:0 0 10px}.source-list{display:grid;gap:8px}.source-list a{font-size:12px;color:#7ebcff;text-decoration:none;overflow-wrap:anywhere}.pipeline{display:flex;gap:6px;flex-wrap:wrap}.stage{padding:7px 9px;border-radius:9px;border:1px solid var(--line);font-size:11px;color:var(--muted)}.stage.active{background:rgba(78,163,255,.12);border-color:#3f80bf;color:#cce5ff}.foot{color:#6985a2;font-size:11px;text-align:center;padding:28px 0 8px}
+    @media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.toolbar{grid-template-columns:1fr 1fr}.toolbar input{grid-column:1/-1}.grid{grid-template-columns:1fr}}@media(max-width:560px){.shell{padding:15px}.topbar{align-items:flex-start}.badge{display:none}.stats{grid-template-columns:1fr 1fr}.stat{padding:14px}.stat strong{font-size:24px}.toolbar{grid-template-columns:1fr}.toolbar input{grid-column:auto}.card{padding:16px}.company{font-size:17px}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand"><div class="logo">IL</div><div><h1>Inventory Leads</h1><div class="subtitle">Prospección B2B para servicios de inventario · Lima / Callao</div></div></div>
+      <div class="badge">V1 · Investigación pública verificada</div>
+    </header>
+
+    <section class="stats" id="stats"></section>
+
+    <section class="toolbar">
+      <input id="search" class="control" placeholder="Buscar empresa, rubro, contacto…" />
+      <select id="scoreFilter" class="control"><option value="all">Todos los scores</option><option value="hot">🔥 80+</option><option value="good">🟢 60–79</option><option value="review">🟡 &lt;60</option></select>
+      <select id="sectorFilter" class="control"><option value="all">Todos los rubros</option></select>
+      <select id="statusFilter" class="control"><option value="all">Todos los estados</option><option>Nuevo</option><option>Por contactar</option><option>Contactado</option><option>Interesado</option><option>Cotización</option><option>Cliente</option></select>
+    </section>
+
+    <section class="grid" id="grid"></section>
+    <div class="foot">Los scores son indicadores comerciales internos. Una señal de inventario no implica que la empresa esté buscando tercerizar el servicio.</div>
+  </main>
+
+  <dialog id="detail"><div class="modal" id="modalBody"></div></dialog>
+
+<script>
+const leads = [
+  {
+    id:'superpet', company:'SuperPet', sector:'Retail mascotas', location:'Lima / Perú', score:85, closeScore:55, status:'Nuevo',
+    tags:['+60 tiendas','E-commerce','Recojo en tienda','Retail físico'],
+    signal:'La empresa declara más de 60 tiendas. Su operación combina tiendas físicas, e-commerce, delivery y recojo, una estructura donde la exactitud de inventario es crítica.',
+    contact:{phone:'01 641-6464', whatsapp:'+51 993 703 333', email:'pedidos@superpet.pe', quality:'General · falta llegar a Operaciones'},
+    decision:{name:'Paolo Ponce Toranzo', role:'Operaciones Logísticas / Supply Chain', direct:'Perfil profesional público identificado; no se encontró un contacto directo público verificado.'},
+    why:['Múltiples tiendas (+25)','Retail / productos físicos (+15)','Operación logística omnicanal (+15)','Lima (+5)','Canales corporativos públicos (+5)','Escala operativa alta (+20)'],
+    sources:[
+      ['SuperPet · Preguntas frecuentes','https://www.superpet.pe/preguntas-frecuentes.html'],
+      ['SuperPet · Tiendas / carrito','https://www.superpet.pe/carro'],
+      ['Perfil profesional público · Paolo Ponce','https://pe.linkedin.com/in/paoloponcetoranzo']
+    ]
+  },
+  {
+    id:'promart', company:'Promart', sector:'Homecenter / ferretería', location:'Lima / Perú', score:85, closeScore:30, status:'Nuevo',
+    tags:['Múltiples tiendas','Homecenter','E-commerce','Alto volumen SKU'],
+    signal:'Homecenter con operación multitienda y flujo de productos por tienda. Tiene alto potencial de inventario, aunque por tamaño la accesibilidad comercial inicial puede ser menor.',
+    contact:{phone:'01 619-4810', whatsapp:'—', email:'servicioalcliente@promart.pe', quality:'General · falta decisor'},
+    decision:{name:'Pendiente', role:'Objetivo: Logística / Inventarios / Operaciones', direct:'La V1 debe enriquecer este prospecto antes del contacto.'},
+    why:['Múltiples tiendas (+25)','Retail / homecenter (+15)','Catálogo físico amplio (+15)','Operación por tienda (+15)','Lima (+5)','Contacto general público (+5)','Escala alta (+5)'],
+    sources:[['Promart · Atención / Briko','https://www.promart.pe/briko'],['Promart · Términos','https://www.promart.pe/terminos-y-condiciones']]
+  },
+  {
+    id:'casaideas', company:'Casaideas Perú', sector:'Retail hogar', location:'Lima / Perú', score:82, closeScore:50, status:'Nuevo',
+    tags:['Supply Chain','Centro de distribución','Retail','Importación'],
+    signal:'Existe evidencia pública reciente del equipo de Supply Chain trabajando iniciativas de inbound y entrega al centro de distribución de Lurín. Es una señal operativa fuerte, aunque no confirma intención de tercerizar inventarios.',
+    contact:{phone:'01 642-9843', whatsapp:'—', email:'—', quality:'General / pendiente de verificar canal comercial'},
+    decision:{name:'Adolfo Carreño', role:'Gerente de Supply Chain · Casaideas', direct:'Cargo confirmado en fuente PUCP y perfil profesional público. No se muestra un teléfono personal.'},
+    why:['Retail físico (+15)','Supply Chain identificado (+15)','Centro de distribución (+15)','Importación / inbound (+10)','Operación multitienda (+15)','Decisor público identificado (+7)','Lima (+5)'],
+    sources:[['PUCP · Adolfo Carreño','https://www.fondoeditorial.pucp.edu.pe/ciencias-e-ingenieria-/619-cadena-de-suministro-y-logistica.html'],['Publicación Supply Chain Casaideas','https://es.linkedin.com/posts/adolfo-carre%C3%B1o-41b96423_casaideas-klog-adualink-activity-7370880491408748544-Zbr5'],['Perfil profesional público','https://pe.linkedin.com/in/adolfo-carre%C3%B1o-41b96423']]
+  },
+  {
+    id:'memory-kings', company:'Memory Kings', sector:'Tecnología / mayorista', location:'Cercado de Lima', score:78, closeScore:78, status:'Por contactar',
+    tags:['Almacén confirmado','Mayoristas','Tecnología','Contacto accionable'],
+    signal:'La web publica un almacén específico en Recoleta y un canal reseller/mayorista con persona, teléfono y correo. Es un prospecto más accesible que una gran cadena.',
+    contact:{phone:'998 187 472 (Almacén)', whatsapp:'998 288 897 (Reseller)', email:'info@memorykings.com.pe', quality:'Alta · almacén y mayorista'},
+    decision:{name:'Lucy Gonzales', role:'Canal Reseller / Mayoristas', direct:'998 288 897 · lucy.gonzales@memorykings.com.pe (publicado por la empresa).'},
+    why:['Tecnología / físicos (+15)','Almacén confirmado (+15)','Mayorista / reseller (+15)','E-commerce (+10)','Lima (+5)','Contacto específico (+10)','Accesibilidad comercial (+8)'],
+    sources:[['Memory Kings · Contáctenos','https://ftp.memorykings.pe/contactenos']]
+  }
+];
+
+const stored = JSON.parse(localStorage.getItem('inventoryLeadStatus') || '{}');
+leads.forEach(l=>{if(stored[l.id]) l.status=stored[l.id]});
+const $=s=>document.querySelector(s);
+const scoreColor=s=>s>=80?'#28d17c':s>=60?'#4ea3ff':'#ffbf47';
+const scoreLabel=s=>s>=80?'🔥 Prioridad alta':s>=60?'🟢 Buen prospecto':'🟡 Revisar';
+
+function renderStats(){
+  const withContact=leads.filter(l=>l.contact.phone!=='—'||l.contact.whatsapp!=='—'||l.contact.email!=='—').length;
+  const withDecision=leads.filter(l=>l.decision.name!=='Pendiente').length;
+  const hot=leads.filter(l=>l.score>=80).length;
+  $('#stats').innerHTML=`
+    <div class="stat"><span>Prospectos</span><strong>${leads.length}</strong><small>investigados</small></div>
+    <div class="stat"><span>Prioridad alta</span><strong>${hot}</strong><small>score 80+</small></div>
+    <div class="stat"><span>Con contacto</span><strong>${withContact}</strong><small>canal público</small></div>
+    <div class="stat"><span>Decisor identificado</span><strong>${withDecision}</strong><small>cargo / persona</small></div>`;
+}
+
+function render(){
+  const q=$('#search').value.toLowerCase().trim(), sf=$('#scoreFilter').value, sector=$('#sectorFilter').value, status=$('#statusFilter').value;
+  const filtered=leads.filter(l=>{
+    const hay=[l.company,l.sector,l.location,l.decision.name,l.decision.role,l.contact.phone,l.contact.email,...l.tags].join(' ').toLowerCase();
+    const scoreOK=sf==='all'||(sf==='hot'&&l.score>=80)||(sf==='good'&&l.score>=60&&l.score<80)||(sf==='review'&&l.score<60);
+    return (!q||hay.includes(q))&&scoreOK&&(sector==='all'||l.sector===sector)&&(status==='all'||l.status===status);
+  });
+  $('#grid').innerHTML=filtered.length?filtered.map(l=>`
+    <article class="card" style="--score-color:${scoreColor(l.score)}">
+      <div class="cardhead"><div><div class="company">${l.company}</div><div class="meta">${l.sector} · ${l.location}</div></div><div class="score">${l.score}/100</div></div>
+      <div class="chips">${l.tags.map(t=>`<span class="chip">${t}</span>`).join('')}</div>
+      <div class="signal"><b>${scoreLabel(l.score)}</b><br>${l.signal}</div>
+      <div class="contact"><div>📞 <b>${l.contact.phone}</b></div><div>💬 ${l.contact.whatsapp}</div><div>👤 ${l.decision.name} · <span class="muted">${l.decision.role}</span></div></div>
+      <div class="actions"><button class="btn primary" onclick="openLead('${l.id}')">Ver ficha completa</button><select class="btn" onchange="setStatus('${l.id}',this.value)">${['Nuevo','Por contactar','Contactado','Interesado','Cotización','Cliente'].map(s=>`<option ${s===l.status?'selected':''}>${s}</option>`).join('')}</select></div>
+    </article>`).join(''):'<div class="empty">No hay prospectos que coincidan con los filtros.</div>';
+}
+
+window.setStatus=(id,status)=>{const l=leads.find(x=>x.id===id);l.status=status;stored[id]=status;localStorage.setItem('inventoryLeadStatus',JSON.stringify(stored));render()};
+window.openLead=id=>{const l=leads.find(x=>x.id===id);$('#modalBody').innerHTML=`
+  <div class="modalhead"><div><div class="company">${l.company}</div><div class="meta">${l.sector} · ${l.location}</div></div><button class="close" onclick="detail.close()">×</button></div>
+  <div class="section"><h3>Prioridad comercial</h3><div class="score" style="color:${scoreColor(l.score)}">${l.score}/100 · ${scoreLabel(l.score)}</div><div class="muted" style="margin-top:5px">Accesibilidad estimada: ${l.closeScore}/100</div></div>
+  <div class="section"><h3>Por qué vale la pena</h3><div class="signal">${l.signal}</div>${l.why.map(x=>`<div class="muted" style="margin:5px 0">✓ ${x}</div>`).join('')}</div>
+  <div class="section"><h3>Contacto público</h3><div class="contact"><div>📞 ${l.contact.phone}</div><div>💬 ${l.contact.whatsapp}</div><div>✉️ ${l.contact.email}</div><div>Calidad: <b>${l.contact.quality}</b></div></div></div>
+  <div class="section"><h3>Posible decisor / área objetivo</h3><div><b>${l.decision.name}</b></div><div class="muted">${l.decision.role}</div><div style="margin-top:8px;font-size:13px">${l.decision.direct}</div></div>
+  <div class="section"><h3>Pipeline</h3><div class="pipeline">${['Nuevo','Por contactar','Contactado','Interesado','Cotización','Cliente'].map(s=>`<span class="stage ${s===l.status?'active':''}">${s}</span>`).join('')}</div></div>
+  <div class="section"><h3>Fuentes públicas</h3><div class="source-list">${l.sources.map(s=>`<a href="${s[1]}" target="_blank" rel="noopener">↗ ${s[0]}</a>`).join('')}</div></div>`;$('#detail').showModal()};
+
+const sectors=[...new Set(leads.map(l=>l.sector))];sectors.forEach(s=>$('#sectorFilter').insertAdjacentHTML('beforeend',`<option>${s}</option>`));
+['search','scoreFilter','sectorFilter','statusFilter'].forEach(id=>$('#'+id).addEventListener(id==='search'?'input':'change',render));
+renderStats();render();
+</script>
+</body>
+</html>
