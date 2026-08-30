@@ -1,0 +1,1 @@
+(()=>{const base=Array.isArray(window.INVENTORY_LEADS)?window.INVENTORY_LEADS:[];const seen=new Set();const clean=[];for(const l of base){const k=((l&&l.id)||((l&&l.company)||'').toLowerCase().trim());if(!k||seen.has(k))continue;seen.add(k);clean.push(l);if(clean.length===100)break;}window.INVENTORY_LEADS=clean;window.AGP_BASE_LEAD_COUNT=clean.length;})();
