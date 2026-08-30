@@ -1,0 +1,16 @@
+/* AGP V9.8 · Corrección de tarjetas de prospectos */
+#grid{grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible}
+#grid .card{min-width:0;width:100%;max-width:100%;overflow:visible;padding-right:42px!important}
+#grid .cardTop{min-width:0;width:100%;align-items:flex-start!important}
+#grid .cardTop>div:first-child{min-width:0;flex:1 1 auto}
+#grid .name{min-width:0;max-width:100%;white-space:normal!important;overflow-wrap:anywhere;word-break:normal;line-height:1.28!important;padding-right:4px}
+#grid .score.cardState81{flex:0 0 auto;max-width:92px;min-width:68px!important}
+#grid .score.cardState81 b{white-space:normal!important;text-align:center;overflow-wrap:anywhere}
+#grid .chips{min-width:0;max-width:100%;overflow:visible;align-items:center}
+#grid .chip{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+#grid .contact{max-height:none!important;height:auto!important;overflow:visible!important;min-width:0;overflow-wrap:anywhere;word-break:break-word;padding-right:2px!important}
+#grid .contact a{max-width:100%;overflow-wrap:anywhere;word-break:break-word}
+#grid .card:after{right:14px!important;top:50%;z-index:2}
+@media(max-width:900px){#grid{grid-template-columns:1fr}}
+@media(max-width:720px){#grid{width:100%;gap:10px!important}#grid .card{padding:15px 42px 15px 15px!important;border-radius:21px!important}#grid .cardTop{gap:9px!important}#grid .name{font-size:15.5px!important}#grid .score.cardState81{min-width:64px!important;max-width:76px;padding:6px 7px!important}#grid .contact{font-size:11.5px!important;line-height:1.55!important}#grid .card:after{right:13px!important;font-size:21px!important}}
+@media(max-width:380px){#grid .card{padding-right:38px!important}#grid .score.cardState81{min-width:58px!important;max-width:68px}#grid .name{font-size:15px!important}#grid .card:after{right:10px!important}}
