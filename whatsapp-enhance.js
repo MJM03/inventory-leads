@@ -1,17 +1,18 @@
 (()=>{
-  // Load the V3.9 researched expansion synchronously before app.js initializes.
-  // This keeps the original lead base untouched and makes rollback simple.
-  if(!window.__AGP_V39_LOADING){
-    window.__AGP_V39_LOADING=true;
-    document.write('<script src="leads-v39.js?v=39-250"><\/script>');
-  }
+  // V5 bootstrap: the legacy V3.9 expansion loader was removed permanently.
+  // Prospect data is now controlled only by leads.js + reset + strict files in index.html.
+  const mobileCss=document.createElement('link');
+  mobileCss.rel='stylesheet';mobileCss.href='mobile-v50.css?v=50';document.head.appendChild(mobileCss);
+  const mobileJs=document.createElement('script');
+  mobileJs.src='mobile-v50.js?v=50';mobileJs.defer=true;document.head.appendChild(mobileJs);
 })();
 
 window.addEventListener('DOMContentLoaded',()=>{
   const leads=window.INVENTORY_LEADS||[];
   const clean=v=>(v||'').trim();
+  const isPeruMobile=v=>{const d=(v||'').replace(/\D/g,'').replace(/^51/,'');return /^9\d{8}$/.test(d)};
   leads.forEach(l=>{
-    if(!clean(l.whatsapp)&&clean(l.phone)){
+    if(!clean(l.whatsapp)&&isPeruMobile(l.phone)){
       l.whatsapp=l.phone;
       l.whatsappAssumed=true;
     }
