@@ -1,0 +1,12 @@
+(()=>{
+if(window.__AGP_QUOTE_READINESS_V86)return;window.__AGP_QUOTE_READINESS_V86=true;
+const KEY='inventoryLeadGuidedSales';
+const total=8;
+const parse=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch{return{}}};
+function leadId(){const h=document.querySelector('#modal .sheetTop h2')?.textContent?.trim();return (window.INVENTORY_LEADS||[]).find(x=>x.company===h)?.id||''}
+function countFor(id){const g=parse()[id]||{};return Object.values(g.checks||{}).filter(Boolean).length}
+function paint(box,id){const n=countFor(id),pct=Math.round(n/total*100);box.querySelector('.qr86Count').textContent=`${n}/${total}`;box.querySelector('.qr86Bar i').style.width=`${pct}%`;const msg=box.querySelector('.qr86Msg');box.dataset.level=n>=6?'ready':n>=3?'mid':'low';msg.textContent=n>=6?'Información suficiente para preparar una cotización':n>=3?'Vas avanzando: completa algunos datos más antes de cotizar':'Aún faltan datos básicos para cotizar con confianza'}
+function install(){try{const host=document.getElementById('modal'),guided=host?.querySelector('.guidedSales');if(!host||!guided||host.querySelector('.quoteReadiness86'))return;const id=leadId();if(!id)return;const el=document.createElement('div');el.className='quoteReadiness86';el.innerHTML=`<div class="qr86Top"><div><span class="miniLabel">Datos para cotizar</span><b class="qr86Title">Cotización</b></div><strong class="qr86Count">0/${total}</strong></div><div class="qr86Bar"><i></i></div><div class="qr86Msg"></div>`;const details=guided.querySelector('.gsDetails');(details||guided).insertAdjacentElement(details?'beforebegin':'afterbegin',el);paint(el,id)}catch(e){console.warn('AGP quote readiness isolated error',e)}}
+function boot(){install();const modal=document.getElementById('modal');if(modal&&!modal.__qr86obs){modal.__qr86obs=true;new MutationObserver(muts=>{if(muts.some(m=>m.addedNodes.length))queueMicrotask(install)}).observe(modal,{childList:true,subtree:true})}document.addEventListener('change',e=>{if(!e.target?.matches?.('[data-gs-check]'))return;setTimeout(()=>{const box=document.querySelector('#modal .quoteReadiness86'),id=leadId();if(box&&id)paint(box,id)},0)})}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();
