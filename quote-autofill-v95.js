@@ -1,0 +1,13 @@
+(()=>{
+if(window.__AGP_QUOTE_AUTOFILL_V95)return;window.__AGP_QUOTE_AUTOFILL_V95=true;
+const DKEY='inventoryLeadQuoteData';
+const read=()=>{try{return JSON.parse(localStorage.getItem(DKEY)||'{}')}catch{return{}}};
+const leads=()=>window.INVENTORY_LEADS||[];
+const $=id=>document.getElementById(id);
+function setVal(id,val){const el=$(id);if(!el||val===undefined||val===null)return;el.value=String(val);el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))}
+function setCheck(id,val){const el=$(id);if(!el)return;el.checked=!!val;el.dispatchEvent(new Event('change',{bubbles:true}))}
+function businessType(lead){const s=(lead?.sector||'').toLowerCase();if(s.includes('farmacia')||s.includes('botica'))return'1.14';if(s.includes('ferreter')||s.includes('repuesto'))return'1.12';if(s.includes('tecnolog')||s.includes('celular')||s.includes('electr'))return'1.18';if(s.includes('minimarket')||s.includes('abarrote'))return'1.05';if(s.includes('bazar')||s.includes('mascota')||s.includes('cosm'))return'1.08';return'1'}
+function apply(id){if(!id)return;const d=read()[id]||{},lead=leads().find(x=>x.id===id);setVal('quoteType',businessType(lead));const volume={"Hasta 500":'1','501-1500':'1.08','1501-3000':'1.18','3001-6000':'1.32','6000+':'1.52'};if(d.volume)setVal('quoteVolume',volume[d.volume]||'1');const order={ordered:'1',mixed:'1.08',disordered:'1.18'};if(d.order)setVal('quoteOrder',order[d.order]||'1');if(d.areas)setCheck('quoteMulti',d.areas!=='1');if(d.serials)setCheck('quoteSerial',d.serials!=='none');if(d.schedule)setCheck('quoteNight',['night','dawn'].includes(d.schedule));if(d.differences)setCheck('quoteDiff',d.differences==='review');setTimeout(()=>$('calcQuote')?.click(),50);let note=$('quoteAutofill95');if(!note){note=document.createElement('div');note.id='quoteAutofill95';note.className='quoteAutofill95';document.querySelector('#quoteForm')?.prepend(note)}const n=Object.keys(d).filter(k=>k!=='updatedAt'&&d[k]).length;note.textContent=n?`✓ ${n}/8 datos del prospecto precargados automáticamente`:'Este prospecto todavía no tiene datos guiados guardados.'}
+function boot(){const q=$('quoteLead');if(!q)return;q.addEventListener('change',()=>apply(q.value));document.addEventListener('click',e=>{if(e.target?.closest?.('[data-module="quote"]')&&q.value)setTimeout(()=>apply(q.value),80)})}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();
