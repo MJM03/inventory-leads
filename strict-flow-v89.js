@@ -1,0 +1,43 @@
+(()=>{
+if(window.__AGP_STRICT_FLOW_V89)return;window.__AGP_STRICT_FLOW_V89=true;
+const FKEY='inventoryLeadStrictFlow',GKEY='inventoryLeadGuidedSales';
+const read=k=>{try{return JSON.parse(localStorage.getItem(k)||'{}')}catch{return{}}};
+const write=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+const leads=()=>window.INVENTORY_LEADS||[];
+const leadId=()=>{const h=document.querySelector('#modal .sheetTop h2')?.textContent?.trim();return leads().find(x=>x.company===h)?.id||''};
+const leadBy=id=>leads().find(x=>x.id===id);
+const fields=[
+ ['volume','Cantidad aproximada de SKU / productos','Para poder dimensionar el inventario, ¿aproximadamente cuántos productos o SKU manejan?'],
+ ['zone','Distrito / ubicación','¿En qué distrito se encuentra el local o almacén donde realizaríamos el inventario?'],
+ ['areas','Ambientes / pisos / almacenes','¿El inventario está concentrado en un solo ambiente o tienen varias áreas, pisos o almacenes?'],
+ ['codes','Códigos de barras','¿La mayoría de sus productos cuenta con código de barras o también manejan productos sin código?'],
+ ['serials','IMEI / series / lotes','¿Manejan productos que necesiten control por IMEI, número de serie o lote?'],
+ ['order','Nivel de orden','¿Actualmente la mercadería está ordenada por zonas o referencias, o se encuentra mezclada?'],
+ ['schedule','Fecha y horario','¿Para qué fecha y horario aproximadamente les gustaría realizar el inventario?'],
+ ['differences','Revisión de diferencias','¿Necesitan que además del conteo revisemos las diferencias entre el stock físico y su registro actual?']
+];
+function flow(id){return read(FKEY)[id]||{responseHandled:false}}
+function patchFlow(id,p){const a=read(FKEY);a[id]={...(a[id]||{}),...p};write(FKEY,a)}
+function checks(id){return read(GKEY)[id]?.checks||{}}
+function done(id){return Object.values(checks(id)).filter(Boolean).length}
+function markCheck(id,key){const all=read(GKEY),cur=all[id]||{checks:{}};all[id]={...cur,checks:{...(cur.checks||{}),[key]:true},updatedAt:new Date().toISOString()};write(GKEY,all)}
+function step(id){const outreach=read('inventoryLeadOutreach')[id]||'Sin contactar',accepted=read('inventoryLeadAccepted')[id]||{},d=done(id),f=flow(id),stage=accepted.stage||'',quote=Number(accepted.quote)||0;if(outreach==='No interesado')return 7;if(quote>0||['Cotización enviada','Negociando','Fecha confirmada','Servicio realizado','Cobro pendiente','Cerrado'].includes(stage))return 6;if(d>=6)return 5;if(f.responseHandled||['Interesado','Aceptó propuesta','Seguimiento'].includes(outreach)||d>0)return 4;if(outreach==='Respondió')return 3;if(outreach==='Mensaje enviado')return 2;return 1}
+function wa(id,text){const l=leadBy(id);let n=String(l?.whatsapp||l?.phone||'').replace(/\D/g,'');if(/^9\d{8}$/.test(n))n='51'+n;return /^519\d{8}$/.test(n)?`https://wa.me/${n}?text=${encodeURIComponent(text)}`:''}
+async function copy(text,btn){try{await navigator.clipboard.writeText(text);const old=btn.textContent;btn.textContent='Copiado ✓';setTimeout(()=>btn.textContent=old,1100)}catch{}}
+function hideAll(m){m.querySelectorAll(':scope > .block,:scope > .commercialAssist79,:scope > .guidedSales,:scope > .quoteReadiness86,:scope > .quoteNext87,:scope > .nextStep82,:scope > .focusFlow88').forEach(x=>x.classList.add('strict89Hide'))}
+function show(m,el){if(el)el.classList.remove('strict89Hide')}
+function blockBy(m,title){return [...m.querySelectorAll(':scope > .block')].find(b=>b.querySelector('h3')?.textContent.trim()===title)}
+function frame(s,title,text,body=''){return `<div class="sf89Step">PASO ${Math.min(s,6)} DE 6</div><h3>${title}</h3><p>${text}</p>${body}`}
+function render(){try{const m=document.getElementById('modal'),id=leadId();if(!m||!id)return;const s=step(id),d=done(id);hideAll(m);let box=m.querySelector('.strictFlow89');if(!box){box=document.createElement('section');box.className='strictFlow89';m.querySelector('.sheetTop')?.insertAdjacentElement('afterend',box)}box.classList.remove('strict89Hide');box.dataset.step=s;
+ if(s===1){box.innerHTML=frame(1,'Enviar el primer mensaje','No necesitas ver nada más todavía. El objetivo es iniciar la conversación y esperar respuesta.','<div class="sf89Hint">Cuando envíes el WhatsApp, el CRM desbloqueará el siguiente paso.</div>');show(m,blockBy(m,'Mensaje inicial'));}
+ else if(s===2){box.innerHTML=frame(2,'Esperar la respuesta','El primer contacto ya fue enviado. No cotices ni pidas todos los datos todavía.','<button class="btn primary sf89Responded">El cliente respondió →</button><div class="sf89Hint">Si aún no responde, deja este prospecto aquí y continúa con otro.</div>');box.querySelector('.sf89Responded').onclick=()=>{window.setStage?.(id,'Respondió');setTimeout(render,180)}}
+ else if(s===3){box.innerHTML=frame(3,'Responder correctamente','Elige la situación que más se parece a lo que dijo el cliente y contesta. Después confirma que esta respuesta ya fue atendida.','<button class="btn primary sf89Handled">Respuesta atendida · continuar →</button><button class="btn sf89Close">Cerrar como no interesado</button>');show(m,m.querySelector('.commercialAssist79'));box.querySelector('.sf89Handled').onclick=()=>{patchFlow(id,{responseHandled:true});render()};box.querySelector('.sf89Close').onclick=()=>window.setStage?.(id,'No interesado')}
+ else if(s===4){const c=checks(id),miss=fields.find(([k])=>!c[k]);const body=miss?`<div class="sf89Count">${d}/8 datos confirmados</div><div class="sf89Question"><small>PREGUNTA SOLO ESTO AHORA</small><b>${miss[1]}</b><textarea class="ctl sf89Text" rows="3">${miss[2]}</textarea><div class="sf89Actions"><button class="btn sf89Copy">Copiar</button><button class="btn whatsapp sf89Wa">WhatsApp</button></div><button class="btn primary sf89Confirm">Dato confirmado ✓</button></div>`:'';box.innerHTML=frame(4,'Completar datos para cotizar','Una pregunta por vez. Confirma el dato cuando el cliente te lo responda y recién aparecerá la siguiente.',body);if(miss){const text=()=>box.querySelector('.sf89Text').value.trim();box.querySelector('.sf89Copy').onclick=e=>copy(text(),e.currentTarget);box.querySelector('.sf89Wa').onclick=()=>{const u=wa(id,text());if(u)window.open(u,'_blank','noopener')};box.querySelector('.sf89Confirm').onclick=()=>{markCheck(id,miss[0]);render()}}}
+ else if(s===5){box.innerHTML=frame(5,'Preparar la cotización',`Ya tienes ${d}/8 datos confirmados. Es suficiente para preparar una propuesta inicial.`,'<button class="btn primary sf89Quote">Ir al cotizador →</button>');box.querySelector('.sf89Quote').onclick=()=>{document.getElementById('detail')?.close();document.querySelector('[data-module="quote"]')?.click();const q=document.getElementById('quoteLead');if(q){q.value=id;q.dispatchEvent(new Event('change',{bubbles:true}))}}}
+ else if(s===6){box.innerHTML=frame(6,'Seguimiento y cierre','La cotización ya existe. Desde aquí el trabajo continúa en Seguimiento hasta confirmar, realizar y cobrar el servicio.','<button class="btn primary sf89Follow">Ir a seguimiento →</button>');box.querySelector('.sf89Follow').onclick=()=>{document.getElementById('detail')?.close();document.querySelector('[data-module="accepted"]')?.click()}}
+ else{box.innerHTML='<div class="sf89Closed"><b>Contacto cerrado</b><p>Este prospecto está marcado como no interesado. El flujo comercial se detiene aquí.</p></div>'}
+ }catch(e){console.warn('AGP strict flow isolated error',e)}}
+let timer;function schedule(ms=90){clearTimeout(timer);timer=setTimeout(render,ms)}
+function boot(){const m=document.getElementById('modal');if(m&&!m.__sf89obs){m.__sf89obs=true;new MutationObserver(ms=>{if(ms.some(x=>x.addedNodes.length||x.removedNodes.length))schedule(100)}).observe(m,{childList:true})}document.addEventListener('click',e=>{if(e.target?.closest?.('#grid .btn.primary,[onclick*="openLead"],#modal a.whatsapp,#modal .stage'))schedule(180)});document.addEventListener('change',e=>{if(e.target?.closest?.('#modal'))schedule(80)});schedule(120)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();
