@@ -1,1 +1,2 @@
-window.AGP_LOGO='agp-logo.jpg';
+window.AGP_LOGO='agp-logo.jpg?v=34';
+document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('#brandLogo,.brandLogo').forEach(img=>{if(img&&img.tagName==='IMG')img.src=window.AGP_LOGO;});});
