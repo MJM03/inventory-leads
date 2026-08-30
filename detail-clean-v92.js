@@ -1,6 +1,8 @@
 (()=>{
-if(window.__AGP_DETAIL_CLEAN_V92)return;window.__AGP_DETAIL_CLEAN_V92=true;
-function clean(){document.querySelectorAll('#modal .v7HistoryBtn').forEach(x=>x.remove())}
-function boot(){clean();const m=document.getElementById('modal');if(m&&!m.__detailClean92){m.__detailClean92=true;new MutationObserver(ms=>{if(ms.some(x=>x.addedNodes.length))clean()}).observe(m,{childList:true,subtree:true})}}
+if(window.__AGP_DETAIL_STABLE_V93)return;window.__AGP_DETAIL_STABLE_V93=true;
+function cleanHistory(){document.querySelectorAll('#modal .v7HistoryBtn').forEach(x=>x.style.display='none')}
+function closeDetail(){const d=document.getElementById('detail');if(!d)return;try{if(d.open)d.close()}catch{}document.documentElement.classList.remove('detailOpen93');document.body.classList.remove('detailOpen93')}
+function wrapOpen(){const old=window.openLead;if(typeof old!=='function'||old.__stable93)return;const wrapped=function(id){const d=document.getElementById('detail');try{if(d?.open)d.close()}catch{};requestAnimationFrame(()=>{try{old.call(this,id);document.documentElement.classList.add('detailOpen93');document.body.classList.add('detailOpen93');cleanHistory()}catch(e){console.warn('AGP modal open recovery',e);try{if(d?.open)d.close();old.call(this,id)}catch{}}});};wrapped.__stable93=true;window.openLead=wrapped}
+function boot(){const d=document.getElementById('detail');if(!d)return;wrapOpen();cleanHistory();document.addEventListener('click',e=>{const close=e.target?.closest?.('#modal .close');if(close){e.preventDefault();e.stopPropagation();closeDetail();return}if(e.target===d)closeDetail()},true);d.addEventListener('cancel',e=>{e.preventDefault();closeDetail()});d.addEventListener('close',()=>{document.documentElement.classList.remove('detailOpen93');document.body.classList.remove('detailOpen93')});window.addEventListener('pageshow',()=>{if(!d.open){document.documentElement.classList.remove('detailOpen93');document.body.classList.remove('detailOpen93')}})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
