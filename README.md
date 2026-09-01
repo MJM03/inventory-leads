@@ -8,6 +8,17 @@ Dashboard ligero de prospección B2B para un negocio de inventarios físicos en 
 
 👉 **https://mjm03.github.io/inventory-leads/**
 
+## Firebase
+
+La versión 10.5 usa Firebase Authentication y Cloud Firestore para mantener el
+CRM sincronizado entre dispositivos. Los usuarios se administran desde Firebase
+Authentication y solo las cuentas autenticadas pueden acceder al espacio
+compartido `agp-inventory-leads`.
+
+La primera cuenta que inicia sesión migra automáticamente el estado guardado en
+el navegador. Las modificaciones posteriores se sincronizan en tiempo real y
+generan registros de auditoría con usuario, fecha y prospecto afectado.
+
 ## V1
 
 - Dashboard responsive para PC y móvil.
@@ -16,7 +27,7 @@ Dashboard ligero de prospección B2B para un negocio de inventarios físicos en 
 - Contactos públicos y fuentes verificables.
 - Dos lecturas comerciales: potencial de inventario y accesibilidad.
 - Pipeline: Nuevo → Por contactar → Contactado → Interesado → Cotización → Cliente.
-- Estado guardado localmente en el navegador.
+- Estado compartido mediante Firebase, con respaldo local en el navegador.
 - Datos iniciales reales de SuperPet, Promart, Casaideas Perú y Memory Kings.
 
 ## Próxima fase
