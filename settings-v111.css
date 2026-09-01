@@ -1,0 +1,11 @@
+/* V11.1 — shared sync stays quiet; secondary actions live in Settings */
+.firebase-workspace-bar{display:none!important}
+.topactions{display:none!important}
+.moduleNav{overflow:visible!important}
+.agp-settings-btn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.agp-settings-dialog{border:0;padding:0;background:transparent;width:min(94vw,520px);max-height:88vh}
+.agp-settings-dialog::backdrop{background:rgba(8,20,31,.46);backdrop-filter:blur(3px)}
+.agp-settings-sheet{background:var(--panel,#fff);color:var(--text,#15202a);border-radius:24px;padding:20px;box-shadow:0 26px 80px rgba(7,25,40,.28)}
+.agp-settings-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}.agp-settings-head h2{margin:4px 0 0;font-size:1.45rem}.agp-settings-close{width:42px;height:42px;border:0;border-radius:13px;background:rgba(127,127,127,.09);font:inherit;font-size:1.55rem;color:inherit}
+.agp-settings-row,.agp-settings-sync{width:100%;box-sizing:border-box;display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:12px;padding:14px 10px;border:0;border-top:1px solid var(--line,#e4e9ed);background:transparent;color:inherit;text-align:left;font:inherit}.agp-settings-row{cursor:pointer}.agp-settings-row span:nth-child(2),.agp-settings-sync span:nth-child(2){display:grid;gap:3px}.agp-settings-row small,.agp-settings-sync small{color:var(--muted,#718096);font-size:.78rem}.agp-settings-row-icon{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:rgba(24,67,104,.08);font-size:1.2rem}.agp-chevron{font-size:1.65rem;color:var(--muted,#8a98a5)}.agp-settings-sync{grid-template-columns:42px 1fr;padding-top:15px;padding-bottom:15px}.agp-settings-sync>.firebase-sync-dot{justify-self:center}.agp-settings-row.danger b{color:#b53a3a}
+@media(max-width:640px){.moduleNav{grid-template-columns:repeat(5,minmax(0,1fr))!important}.moduleNav .moduleBtn{min-width:0!important;padding-left:5px!important;padding-right:5px!important;font-size:.68rem!important}.agp-settings-btn svg{width:21px;height:21px}.agp-settings-dialog{width:100vw;max-width:100vw;margin:auto 0 0;max-height:88vh}.agp-settings-sheet{border-radius:24px 24px 0 0;padding:20px 18px calc(22px + env(safe-area-inset-bottom))}}
