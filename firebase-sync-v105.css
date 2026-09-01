@@ -1,0 +1,165 @@
+.firebase-auth-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: linear-gradient(145deg, #081522 0%, #10283b 55%, #123b47 100%);
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+.firebase-auth-gate[hidden] {
+  display: none;
+}
+.firebase-auth-card {
+  width: min(100%, 420px);
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 24px;
+  background: rgba(9, 24, 37, 0.94);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+  color: #f4f8fb;
+}
+.firebase-auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.firebase-auth-brand img {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+  border-radius: 14px;
+  background: #fff;
+}
+.firebase-auth-brand h1 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+.firebase-auth-brand p {
+  margin: 4px 0 0;
+  color: #a9bdca;
+  font-size: 0.9rem;
+}
+.firebase-auth-form {
+  display: grid;
+  gap: 14px;
+}
+.firebase-auth-form label {
+  display: grid;
+  gap: 7px;
+  color: #c5d5df;
+  font-size: 0.88rem;
+}
+.firebase-auth-form input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px 14px;
+  border: 1px solid #385266;
+  border-radius: 12px;
+  background: #0d2030;
+  color: #fff;
+  font: inherit;
+  outline: none;
+}
+.firebase-auth-form input:focus {
+  border-color: #29c5b6;
+  box-shadow: 0 0 0 3px rgba(41, 197, 182, 0.16);
+}
+.firebase-auth-submit,
+.firebase-auth-link {
+  border: 0;
+  border-radius: 12px;
+  font: inherit;
+  cursor: pointer;
+}
+.firebase-auth-submit {
+  padding: 13px 16px;
+  background: #19b7a9;
+  color: #05201e;
+  font-weight: 800;
+}
+.firebase-auth-submit:disabled {
+  opacity: 0.58;
+  cursor: wait;
+}
+.firebase-auth-link {
+  padding: 5px;
+  background: transparent;
+  color: #75d9cf;
+}
+.firebase-auth-message {
+  min-height: 20px;
+  margin: 2px 0 0;
+  color: #ffb4aa;
+  font-size: 0.86rem;
+}
+.firebase-auth-message.ok {
+  color: #89e1b2;
+}
+.firebase-session {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.firebase-session-copy {
+  display: grid;
+  text-align: right;
+  line-height: 1.1;
+}
+.firebase-session-copy b {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.78rem;
+}
+.firebase-session-copy span {
+  margin-top: 4px;
+  color: var(--muted, #789);
+  font-size: 0.68rem;
+}
+.firebase-sync-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f0aa3c;
+  box-shadow: 0 0 0 4px rgba(240, 170, 60, 0.14);
+}
+.firebase-sync-dot.online {
+  background: #21bf73;
+  box-shadow: 0 0 0 4px rgba(33, 191, 115, 0.14);
+}
+.firebase-signout {
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+@media (max-width: 640px) {
+  .firebase-auth-card {
+    padding: 23px;
+  }
+  .firebase-session-copy {
+    display: none;
+  }
+  .firebase-session {
+    gap: 7px;
+  }
+  .firebase-signout {
+    padding: 8px;
+  }
+  .topactions {
+    gap: 8px;
+  }
+}
