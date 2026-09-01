@@ -10,7 +10,7 @@
     appId: "1:295339658757:web:241fa689a86bb92a32966c",
   };
   const workspaceId = "agp-inventory-leads";
-  const VERSION = "10.6";
+  const VERSION = "10.9";
   const syncedKeys = [
     "inventoryLeadOutreach",
     "inventoryLeadMessages",
@@ -27,14 +27,11 @@
     "agpPrintableQuote",
     "agpDailySalesPlan",
   ];
-  const roles = {
-    admin: "Administrador",
-    supervisor: "Supervisor",
-    vendedor: "Vendedor",
-  };
+  const roles = { admin: "Administrador", supervisor: "Supervisor", vendedor: "Vendedor" };
   const nativeSet = Storage.prototype.setItem;
   const nativeRemove = Storage.prototype.removeItem;
   const nativeGet = Storage.prototype.getItem;
+
   let currentUser = null;
   let currentMember = null;
   let workspaceRef = null;
@@ -43,23 +40,25 @@
   let applyingCloud = false;
   let lastSignature = "";
   let lastWorkspaceData = null;
+  let authResolved = false;
 
   if (!window.firebase) {
     console.error("Firebase SDK no pudo cargarse.");
     return;
   }
 
-  firebase.initializeApp(firebaseConfig);
+  if (!firebase.apps?.length) firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
-  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
+
+  const persistenceReady = auth
+    .setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+    .catch((error) => {
+      console.warn("No se pudo fijar persistencia LOCAL", error);
+    });
 
   function parse(value, fallback = {}) {
-    try {
-      return value ? JSON.parse(value) : fallback;
-    } catch {
-      return fallback;
-    }
+    try { return value ? JSON.parse(value) : fallback; } catch { return fallback; }
   }
 
   function escapeHtml(value = "") {
@@ -79,16 +78,14 @@
   }
 
   function signature(state = localState()) {
-    return JSON.stringify(syncedKeys.map((key) => [key, state[key] || {}]));
+    return JSON.stringify(syncedKeys.map((key) => [key, state?.[key] || {}]));
   }
 
   function changedEntityIds(beforeValue, afterValue) {
     const before = parse(beforeValue);
     const after = parse(afterValue);
     const ids = new Set([...Object.keys(before), ...Object.keys(after)]);
-    return [...ids]
-      .filter((id) => JSON.stringify(before[id]) !== JSON.stringify(after[id]))
-      .slice(0, 25);
+    return [...ids].filter((id) => JSON.stringify(before[id]) !== JSON.stringify(after[id])).slice(0, 25);
   }
 
   function friendlyError(error) {
@@ -102,40 +99,80 @@
       "auth/network-request-failed": "No se pudo conectar. Revisa tu internet.",
       "auth/user-not-found": "No existe un usuario con ese correo.",
       "permission-denied": "Tu usuario no tiene permiso para realizar esta acción.",
+      "not-authorized": "Tu cuenta existe, pero todavía no está autorizada para este CRM.",
     };
     return messages[error?.code] || "No se pudo completar la operación.";
+  }
+
+  function injectStyles() {
+    if (document.querySelector("#firebase109Styles")) return;
+    const style = document.createElement("style");
+    style.id = "firebase109Styles";
+    style.textContent = `
+      .firebase-auth-gate{transition:opacity .16s ease}
+      .firebase-auth-gate[hidden]{display:none!important}
+      .firebase-auth-card{position:relative}
+      .firebase-auth-gate.is-restoring .firebase-auth-form>label,
+      .firebase-auth-gate.is-restoring #firebaseResetButton{display:none!important}
+      .firebase-auth-gate.is-restoring .firebase-auth-submit{display:flex;align-items:center;justify-content:center;gap:10px;cursor:wait}
+      .firebase-auth-gate.is-restoring .firebase-auth-submit:before{content:"";width:17px;height:17px;border:2px solid rgba(5,32,30,.25);border-top-color:#05201e;border-radius:50%;animation:firebase109spin .7s linear infinite}
+      .firebase-auth-gate.is-restoring .firebase-auth-message{color:#b9d8e3;text-align:center;line-height:1.45;min-height:42px}
+      @keyframes firebase109spin{to{transform:rotate(360deg)}}
+      .firebase-workspace-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0 14px;padding:10px 12px;border:1px solid var(--line,#d7dfe5);border-radius:16px;background:var(--panel,#fff)}
+      .firebase-workspace-status{display:flex;align-items:center;gap:9px;min-width:0}
+      .firebase-workspace-copy{display:grid;gap:2px;min-width:0}
+      .firebase-workspace-copy b{font-size:.78rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .firebase-workspace-copy span{font-size:.68rem;color:var(--muted,#789)}
+      .firebase-workspace-actions{display:flex;align-items:center;gap:7px;flex:0 0 auto}
+      .firebase-team,.firebase-signout{min-height:38px;padding:8px 11px;border:1px solid var(--line,#d7dfe5);border-radius:11px;background:transparent;color:inherit;font:inherit;font-size:.75rem;font-weight:800;cursor:pointer}
+      .firebase-team{background:rgba(25,183,169,.08);color:#0b8178}
+      .firebase-sync-dot{width:9px;height:9px;border-radius:50%;background:#f0aa3c;box-shadow:0 0 0 4px rgba(240,170,60,.14);flex:0 0 auto}
+      .firebase-sync-dot.online{background:#21bf73;box-shadow:0 0 0 4px rgba(33,191,115,.14)}
+      .firebase-role{display:inline-flex;width:max-content;padding:2px 6px;border-radius:999px;background:rgba(25,183,169,.10);color:#0b8178;font-size:.62rem;font-weight:800}
+      @media(max-width:640px){
+        .firebase-workspace-bar{margin:8px 0 12px;padding:9px 10px;border-radius:14px}
+        .firebase-workspace-copy b{max-width:145px}
+        .firebase-workspace-copy .firebase-user-email{display:none}
+        .firebase-team,.firebase-signout{padding:8px 10px}
+      }
+    `;
+    document.head.appendChild(style);
   }
 
   function buildGate() {
     if (document.querySelector("#firebaseAuthGate")) return;
     const gate = document.createElement("section");
     gate.id = "firebaseAuthGate";
-    gate.className = "firebase-auth-gate";
-    gate.innerHTML = `<div class="firebase-auth-card"><div class="firebase-auth-brand"><img alt="AGP"><div><h1>Inventory Leads</h1><p>Acceso seguro al CRM de AGP</p></div></div><form id="firebaseLoginForm" class="firebase-auth-form"><label>Correo electrónico<input id="firebaseEmail" type="email" autocomplete="username" required placeholder="usuario@correo.com"></label><label>Contraseña<input id="firebasePassword" type="password" autocomplete="current-password" required placeholder="Tu contraseña"></label><button id="firebaseLoginButton" class="firebase-auth-submit" type="submit">Ingresar</button><button id="firebaseResetButton" class="firebase-auth-link" type="button">Olvidé mi contraseña</button><p id="firebaseAuthMessage" class="firebase-auth-message" role="status"></p></form></div>`;
+    gate.className = "firebase-auth-gate is-restoring";
+    gate.innerHTML = `<div class="firebase-auth-card"><div class="firebase-auth-brand"><img alt="AGP"><div><h1>Inventory Leads</h1><p>Acceso seguro al CRM de AGP</p></div></div><form id="firebaseLoginForm" class="firebase-auth-form"><label>Correo electrónico<input id="firebaseEmail" type="email" autocomplete="username" required placeholder="usuario@correo.com"></label><label>Contraseña<input id="firebasePassword" type="password" autocomplete="current-password" required placeholder="Tu contraseña"></label><button id="firebaseLoginButton" class="firebase-auth-submit" type="submit" disabled>Comprobando sesión…</button><button id="firebaseResetButton" class="firebase-auth-link" type="button">Olvidé mi contraseña</button><p id="firebaseAuthMessage" class="firebase-auth-message" role="status">Buscando una sesión guardada en este dispositivo…</p></form></div>`;
     gate.querySelector(".firebase-auth-brand img").src = window.AGP_LOGO || "agp-logo.jpg";
     document.body.appendChild(gate);
+
     const form = gate.querySelector("#firebaseLoginForm");
     const email = gate.querySelector("#firebaseEmail");
     const password = gate.querySelector("#firebasePassword");
     const message = gate.querySelector("#firebaseAuthMessage");
     const button = gate.querySelector("#firebaseLoginButton");
+    const remembered = nativeGet.call(localStorage, "agpLastLoginEmail");
+    if (remembered) email.value = remembered;
+
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
-      message.className = "firebase-auth-message";
-      message.textContent = "";
-      button.disabled = true;
-      button.textContent = "Ingresando…";
+      const address = email.value.trim().toLowerCase();
+      if (!address || !password.value) return;
+      nativeSet.call(localStorage, "agpLastLoginEmail", address);
+      setGateLoading("Validando credenciales y cargando tu espacio…");
       try {
-        await auth.signInWithEmailAndPassword(email.value.trim(), password.value);
+        await persistenceReady;
+        await auth.signInWithEmailAndPassword(address, password.value);
+        password.value = "";
       } catch (error) {
-        message.textContent = friendlyError(error);
-        button.disabled = false;
-        button.textContent = "Ingresar";
+        showLoginForm(friendlyError(error));
       }
     });
+
     gate.querySelector("#firebaseResetButton").addEventListener("click", async () => {
       const address = email.value.trim();
-      message.className = "firebase-auth-message";
       if (!address) {
         message.textContent = "Escribe primero tu correo electrónico.";
         return;
@@ -145,14 +182,37 @@
         message.className = "firebase-auth-message ok";
         message.textContent = "Te enviamos un enlace para restablecer tu contraseña.";
       } catch (error) {
+        message.className = "firebase-auth-message";
         message.textContent = friendlyError(error);
       }
     });
   }
 
-  function setGateMessage(text) {
-    const message = document.querySelector("#firebaseAuthMessage");
-    if (message) message.textContent = text;
+  function setGateLoading(text) {
+    const gate = document.querySelector("#firebaseAuthGate");
+    if (!gate) return;
+    gate.hidden = false;
+    gate.classList.add("is-restoring");
+    const button = gate.querySelector("#firebaseLoginButton");
+    const message = gate.querySelector("#firebaseAuthMessage");
+    if (button) { button.disabled = true; button.textContent = "Cargando tu espacio…"; }
+    if (message) { message.className = "firebase-auth-message"; message.textContent = text; }
+  }
+
+  function showLoginForm(messageText = "") {
+    const gate = document.querySelector("#firebaseAuthGate");
+    if (!gate) return;
+    gate.hidden = false;
+    gate.classList.remove("is-restoring");
+    const button = gate.querySelector("#firebaseLoginButton");
+    const message = gate.querySelector("#firebaseAuthMessage");
+    if (button) { button.disabled = false; button.textContent = "Ingresar"; }
+    if (message) { message.className = "firebase-auth-message"; message.textContent = messageText; }
+  }
+
+  function hideGate() {
+    const gate = document.querySelector("#firebaseAuthGate");
+    if (gate) gate.hidden = true;
   }
 
   function memberFor(data, uid) {
@@ -183,30 +243,29 @@
       });
       snapshot = await workspaceRef.get();
     }
+
     let data = snapshot.data() || {};
     const noMembers = !data.members || !Object.keys(data.members).length;
     if (noMembers && !data.ownerUid) {
-      await workspaceRef.set(
-        {
-          version: VERSION,
-          ownerUid: user.uid,
-          members: {
-            [user.uid]: {
-              email: user.email || "",
-              role: "admin",
-              active: true,
-              addedAt: firebase.firestore.FieldValue.serverTimestamp(),
-              addedBy: user.uid,
-            },
+      await workspaceRef.set({
+        version: VERSION,
+        ownerUid: user.uid,
+        members: {
+          [user.uid]: {
+            email: user.email || "",
+            role: "admin",
+            active: true,
+            addedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            addedBy: user.uid,
           },
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          updatedBy: { uid: user.uid, email: user.email || "" },
         },
-        { merge: true },
-      );
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedBy: { uid: user.uid, email: user.email || "" },
+      }, { merge: true });
       snapshot = await workspaceRef.get();
       data = snapshot.data() || {};
     }
+
     const member = memberFor(data, user.uid);
     if (!member) throw Object.assign(new Error("not-authorized"), { code: "not-authorized" });
     lastWorkspaceData = data;
@@ -214,13 +273,8 @@
     return data;
   }
 
-  function canManageTeam() {
-    return currentMember?.role === "admin";
-  }
-
-  function canAssign() {
-    return ["admin", "supervisor"].includes(currentMember?.role);
-  }
+  function canManageTeam() { return currentMember?.role === "admin"; }
+  function canAssign() { return ["admin", "supervisor"].includes(currentMember?.role); }
 
   function setOnline(ok, text = ok ? "Sincronizado" : "Sin conexión") {
     document.querySelector("#firebaseSyncDot")?.classList.toggle("online", ok);
@@ -228,38 +282,28 @@
     if (label) label.textContent = text;
   }
 
-  function addVersionToHistory() {
-    const list = document.querySelector("#updates .updates");
-    if (!list || list.querySelector('[data-version="10.6"]')) return;
-    const item = document.createElement("div");
-    item.className = "update";
-    item.dataset.version = "10.6";
-    item.innerHTML = `<div class="date">31 AGO 2026 · V10.6</div><b>Equipo, roles y asignación multiusuario</b><p>Se agregaron miembros autorizados, roles Administrador/Supervisor/Vendedor, asignación de prospectos, permisos reforzados y actualización remota sin recargar toda la página.</p>`;
-    list.prepend(item);
+  function buildWorkspaceBar(user) {
+    document.querySelector("#firebaseSession")?.remove();
+    const header = document.querySelector(".topbar");
+    if (!header) return;
+    const bar = document.createElement("div");
+    bar.id = "firebaseSession";
+    bar.className = "firebase-workspace-bar";
+    bar.innerHTML = `<div class="firebase-workspace-status"><span id="firebaseSyncDot" class="firebase-sync-dot"></span><div class="firebase-workspace-copy"><b>AGP · <span class="firebase-role">${escapeHtml(roles[currentMember?.role] || currentMember?.role || "Usuario")}</span></b><span class="firebase-user-email">${escapeHtml(user.email || "Usuario")}</span><span id="firebaseSyncText">Sincronizando…</span></div></div><div class="firebase-workspace-actions"><button class="firebase-team" type="button">Equipo</button><button class="firebase-signout" type="button">Salir</button></div>`;
+    header.insertAdjacentElement("afterend", bar);
+    bar.querySelector(".firebase-team").addEventListener("click", openTeamPanel);
+    bar.querySelector(".firebase-signout").addEventListener("click", async () => {
+      syncReady = false;
+      setGateLoading("Cerrando sesión…");
+      await auth.signOut();
+    });
   }
 
   function showApp(user) {
-    document.querySelector("#firebaseAuthGate")?.setAttribute("hidden", "");
     const app = document.querySelector("main.app");
     if (app) app.hidden = false;
-    const actions = document.querySelector(".topactions");
-    if (actions && !document.querySelector("#firebaseSession")) {
-      const session = document.createElement("div");
-      session.id = "firebaseSession";
-      session.className = "firebase-session";
-      session.innerHTML = `<button class="firebase-team" type="button" title="Equipo"><span id="firebaseSyncDot" class="firebase-sync-dot" title="Sincronizando"></span><span class="firebase-session-copy"><b>${escapeHtml(user.email || "Usuario")}</b><span id="firebaseSyncText">Sincronizando…</span></span><span class="firebase-role">${escapeHtml(roles[currentMember?.role] || currentMember?.role || "Usuario")}</span></button><button class="firebase-signout" type="button">Salir</button>`;
-      actions.prepend(session);
-      session.querySelector(".firebase-team").addEventListener("click", openTeamPanel);
-      session.querySelector(".firebase-signout").addEventListener("click", async () => {
-        syncReady = false;
-        syncedKeys.forEach((key) => nativeRemove.call(localStorage, key));
-        Object.keys(sessionStorage)
-          .filter((key) => key.startsWith("firebaseReady:"))
-          .forEach((key) => sessionStorage.removeItem(key));
-        await auth.signOut();
-      });
-    }
-    addVersionToHistory();
+    buildWorkspaceBar(user);
+    hideGate();
   }
 
   function teamRows(data) {
@@ -279,7 +323,7 @@
     const dialog = document.createElement("dialog");
     dialog.id = "firebaseTeamDialog";
     dialog.className = "firebase-team-dialog";
-    dialog.innerHTML = `<div class="firebase-team-sheet"><div class="firebase-team-head"><div><span class="miniLabel">V10.6 Multiusuario</span><h2>Equipo AGP</h2><p>Usuarios autorizados para trabajar con Inventory Leads.</p></div><button type="button" class="firebase-team-close" aria-label="Cerrar">×</button></div><div id="firebaseMemberList" class="firebase-member-list">${teamRows(lastWorkspaceData)}</div>${canManageTeam() ? `<form id="firebaseMemberForm" class="firebase-member-form"><h3>Autorizar usuario</h3><p>Crea primero la cuenta en Firebase Authentication y pega aquí su UID.</p><label>UID<input id="firebaseMemberUid" required autocomplete="off" placeholder="UID de Firebase Authentication"></label><label>Correo<input id="firebaseMemberEmail" type="email" required placeholder="usuario@correo.com"></label><label>Rol<select id="firebaseMemberRole"><option value="vendedor">Vendedor</option><option value="supervisor">Supervisor</option><option value="admin">Administrador</option></select></label><button class="firebase-auth-submit" type="submit">Autorizar acceso</button><p id="firebaseTeamMessage" class="firebase-auth-message" role="status"></p></form>` : `<div class="firebase-role-note">Tu rol actual es <b>${escapeHtml(roles[currentMember?.role] || currentMember?.role)}</b>. Solo un Administrador puede autorizar o desactivar usuarios.</div>`}</div>`;
+    dialog.innerHTML = `<div class="firebase-team-sheet"><div class="firebase-team-head"><div><span class="miniLabel">V10.9 Multiusuario</span><h2>Equipo AGP</h2><p>Usuarios autorizados para trabajar con Inventory Leads.</p></div><button type="button" class="firebase-team-close" aria-label="Cerrar">×</button></div><div id="firebaseMemberList" class="firebase-member-list">${teamRows(lastWorkspaceData)}</div>${canManageTeam() ? `<form id="firebaseMemberForm" class="firebase-member-form"><h3>Autorizar usuario</h3><p>Crea primero la cuenta en Firebase Authentication y pega aquí su UID.</p><label>UID<input id="firebaseMemberUid" required autocomplete="off" placeholder="UID de Firebase Authentication"></label><label>Correo<input id="firebaseMemberEmail" type="email" required placeholder="usuario@correo.com"></label><label>Rol<select id="firebaseMemberRole"><option value="vendedor">Vendedor</option><option value="supervisor">Supervisor</option><option value="admin">Administrador</option></select></label><button class="firebase-auth-submit" type="submit">Autorizar acceso</button><p id="firebaseTeamMessage" class="firebase-auth-message" role="status"></p></form>` : `<div class="firebase-role-note">Tu rol actual es <b>${escapeHtml(roles[currentMember?.role] || currentMember?.role)}</b>. Solo un Administrador puede autorizar o desactivar usuarios.</div>`}</div>`;
     document.body.appendChild(dialog);
     dialog.querySelector(".firebase-team-close").addEventListener("click", () => dialog.close());
     dialog.addEventListener("click", (event) => {
@@ -317,7 +361,7 @@
       message.textContent = "Usuario autorizado.";
       event.currentTarget.reset();
     } catch (error) {
-      console.error(error);
+      message.className = "firebase-auth-message";
       message.textContent = friendlyError(error);
     }
   }
@@ -334,9 +378,7 @@
         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedBy: { uid: currentUser.uid, email: currentUser.email || "" },
       });
-    } catch (error) {
-      console.error(error);
-    }
+    } catch (error) { console.error(error); }
   }
 
   async function writeCloud(key, value, beforeValue) {
@@ -349,19 +391,14 @@
     }
     const parsed = parse(value);
     const batch = db.batch();
-    batch.set(
-      workspaceRef,
-      {
-        state: { [key]: parsed },
-        version: VERSION,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedBy: { uid: currentUser.uid, email: currentUser.email || "", role: currentMember?.role || "" },
-      },
-      { merge: true },
-    );
+    batch.set(workspaceRef, {
+      state: { [key]: parsed },
+      version: VERSION,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedBy: { uid: currentUser.uid, email: currentUser.email || "", role: currentMember?.role || "" },
+    }, { merge: true });
     changedEntityIds(beforeValue, value).forEach((entityId) => {
-      const auditRef = workspaceRef.collection("audit").doc();
-      batch.set(auditRef, {
+      batch.set(workspaceRef.collection("audit").doc(), {
         stateKey: key,
         entityId,
         action: Object.prototype.hasOwnProperty.call(parsed, entityId) ? "update" : "remove",
@@ -403,20 +440,20 @@
   async function applyInitialCloud(data) {
     const cloud = data?.state || null;
     applyingCloud = true;
-    if (cloud) {
-      syncedKeys.forEach((key) => nativeSet.call(localStorage, key, JSON.stringify(cloud[key] || {})));
-    } else {
-      await workspaceRef.set(
-        {
+    try {
+      if (cloud) {
+        syncedKeys.forEach((key) => nativeSet.call(localStorage, key, JSON.stringify(cloud[key] || {})));
+      } else {
+        await workspaceRef.set({
           state: localState(),
           updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
           updatedBy: { uid: currentUser.uid, email: currentUser.email || "" },
-        },
-        { merge: true },
-      );
+        }, { merge: true });
+      }
+    } finally {
+      applyingCloud = false;
+      lastSignature = signature();
     }
-    applyingCloud = false;
-    lastSignature = signature();
   }
 
   function syncMutableObject(target, source) {
@@ -443,46 +480,41 @@
       window.AGP_PENDING?.updateBadge?.();
       window.dispatchEvent(new CustomEvent("agp:firebase-sync", { detail: { remote: true } }));
     } catch (error) {
-      console.warn("La actualización remota requerirá recarga manual", error);
-      setOnline(true, "Actualizado · recarga si falta algo");
+      console.warn("Actualización visual parcial", error);
     }
   }
 
   function watchWorkspace() {
     unsubscribeWorkspace?.();
-    unsubscribeWorkspace = workspaceRef.onSnapshot(
-      (snapshot) => {
-        if (!snapshot.exists) return;
-        const data = snapshot.data() || {};
-        lastWorkspaceData = data;
-        const member = memberFor(data, currentUser?.uid);
-        if (!member) {
-          syncReady = false;
-          setGateMessage("Tu acceso a este CRM fue desactivado.");
-          auth.signOut();
-          return;
-        }
-        currentMember = member;
-        const roleNode = document.querySelector(".firebase-role");
-        if (roleNode) roleNode.textContent = roles[currentMember.role] || currentMember.role || "Usuario";
-        const memberList = document.querySelector("#firebaseMemberList");
-        if (memberList) memberList.innerHTML = teamRows(data);
-        if (!syncReady || snapshot.metadata.hasPendingWrites) return;
-        const cloud = data.state || {};
-        const cloudSignature = signature(cloud);
-        if (cloudSignature === lastSignature) return;
-        applyingCloud = true;
-        syncedKeys.forEach((key) => nativeSet.call(localStorage, key, JSON.stringify(cloud[key] || {})));
-        applyingCloud = false;
-        lastSignature = signature();
-        setOnline(true, "Actualizado en vivo");
-        softRefresh(cloud);
-      },
-      (error) => {
-        console.error(error);
-        setOnline(false, "Sin conexión");
-      },
-    );
+    unsubscribeWorkspace = workspaceRef.onSnapshot((snapshot) => {
+      if (!snapshot.exists || !currentUser) return;
+      const data = snapshot.data() || {};
+      lastWorkspaceData = data;
+      const member = memberFor(data, currentUser.uid);
+      if (!member) {
+        syncReady = false;
+        showLoginForm("Tu acceso a este CRM fue desactivado. Cierra sesión y consulta al administrador.");
+        return;
+      }
+      currentMember = member;
+      const roleNode = document.querySelector(".firebase-role");
+      if (roleNode) roleNode.textContent = roles[currentMember.role] || currentMember.role || "Usuario";
+      const memberList = document.querySelector("#firebaseMemberList");
+      if (memberList) memberList.innerHTML = teamRows(data);
+      if (!syncReady || snapshot.metadata.hasPendingWrites) return;
+      const cloud = data.state || {};
+      const cloudSignature = signature(cloud);
+      if (cloudSignature === lastSignature) return;
+      applyingCloud = true;
+      syncedKeys.forEach((key) => nativeSet.call(localStorage, key, JSON.stringify(cloud[key] || {})));
+      applyingCloud = false;
+      lastSignature = signature();
+      setOnline(true, "Actualizado en vivo");
+      softRefresh(cloud);
+    }, (error) => {
+      console.error(error);
+      setOnline(false, navigator.onLine ? "Error de sincronización" : "Sin conexión");
+    });
   }
 
   function decorateLeadAssignment(id) {
@@ -501,12 +533,7 @@
       const selected = lastWorkspaceData?.members?.[userId];
       const next = parse(nativeGet.call(localStorage, "inventoryLeadAssignments"));
       if (!userId) delete next[id];
-      else next[id] = {
-        userId,
-        email: selected?.email || "",
-        assignedAt: new Date().toISOString(),
-        assignedBy: currentUser.uid,
-      };
+      else next[id] = { userId, email: selected?.email || "", assignedAt: new Date().toISOString(), assignedBy: currentUser.uid };
       localStorage.setItem("inventoryLeadAssignments", JSON.stringify(next));
     });
   }
@@ -515,7 +542,7 @@
     let attempts = 0;
     const timer = setInterval(() => {
       attempts += 1;
-      if (typeof window.openLead === "function" && !window.openLead.__firebase106) {
+      if (typeof window.openLead === "function" && !window.openLead.__firebase109) {
         clearInterval(timer);
         const original = window.openLead;
         const wrapped = function (id) {
@@ -523,62 +550,73 @@
           queueMicrotask(() => decorateLeadAssignment(id));
           return result;
         };
-        wrapped.__firebase106 = true;
+        wrapped.__firebase109 = true;
         window.openLead = wrapped;
-      } else if (attempts > 50) clearInterval(timer);
+      } else if (attempts > 80) clearInterval(timer);
     }, 100);
   }
 
   async function prepareUser(user) {
     currentUser = user;
     workspaceRef = db.collection("workspaces").doc(workspaceId);
-    const sessionKey = `firebaseReady106:${user.uid}`;
+    setGateLoading("Sesión encontrada. Sincronizando Inventory Leads…");
     try {
       const data = await ensureWorkspaceAndMembership(user);
       await applyInitialCloud(data);
-      if (sessionStorage.getItem(sessionKey) !== "1") {
-        sessionStorage.setItem(sessionKey, "1");
-        window.location.reload();
-        return;
-      }
       syncReady = true;
       showApp(user);
       setOnline(true);
       watchWorkspace();
       installLeadAssignmentHook();
+      setTimeout(() => softRefresh(data.state || {}), 0);
+      setTimeout(() => softRefresh(data.state || {}), 350);
     } catch (error) {
       console.error("No se pudo preparar Firestore", error);
+      currentMember = null;
+      syncReady = false;
       if (error?.code === "not-authorized") {
-        setGateMessage("Tu cuenta existe, pero todavía no está autorizada para AGP Inventory Leads.");
+        showLoginForm("Tu cuenta está autenticada, pero todavía no está autorizada para AGP Inventory Leads. Usa ‘Salir’ desde Firebase Authentication o pide acceso al administrador.");
+      } else if (!navigator.onLine) {
+        showLoginForm("No hay conexión. Tu sesión sigue guardada; vuelve a intentar cuando tengas internet.");
       } else {
-        setGateMessage("Tu sesión abrió, pero Firestore todavía no permite el acceso.");
+        showLoginForm("Tu sesión sigue guardada, pero no pudimos cargar Firestore. Recarga para reintentar.");
       }
-      await auth.signOut().catch(() => {});
     }
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
+  function bootDom() {
+    injectStyles();
     const app = document.querySelector("main.app");
     if (app) app.hidden = true;
     buildGate();
-  });
+  }
 
-  auth.onAuthStateChanged(async (user) => {
-    if (user) {
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bootDom, { once: true });
+  else bootDom();
+
+  persistenceReady.finally(() => {
+    auth.onAuthStateChanged(async (user) => {
+      authResolved = true;
       if (document.readyState === "loading") {
         await new Promise((resolve) => document.addEventListener("DOMContentLoaded", resolve, { once: true }));
       }
-      await prepareUser(user);
-      return;
-    }
-    currentUser = null;
-    currentMember = null;
-    syncReady = false;
-    unsubscribeWorkspace?.();
-    unsubscribeWorkspace = null;
-    const app = document.querySelector("main.app");
-    if (app) app.hidden = true;
-    document.querySelector("#firebaseAuthGate")?.removeAttribute("hidden");
-    document.querySelector("#firebaseSession")?.remove();
+      if (user) {
+        await prepareUser(user);
+        return;
+      }
+      currentUser = null;
+      currentMember = null;
+      syncReady = false;
+      unsubscribeWorkspace?.();
+      unsubscribeWorkspace = null;
+      document.querySelector("#firebaseSession")?.remove();
+      const app = document.querySelector("main.app");
+      if (app) app.hidden = true;
+      showLoginForm();
+    });
   });
+
+  setTimeout(() => {
+    if (!authResolved) setGateLoading("Firebase está tardando más de lo normal. Comprobando tu sesión…");
+  }, 3500);
 })();
