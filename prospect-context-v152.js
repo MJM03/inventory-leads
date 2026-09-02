@@ -1,7 +1,7 @@
 (()=>{
   'use strict';
-  if(window.__AGP_PROSPECT_CONTEXT_V154)return;
-  window.__AGP_PROSPECT_CONTEXT_V154=true;
+  if(window.__AGP_PROSPECT_CONTEXT_V155)return;
+  window.__AGP_PROSPECT_CONTEXT_V155=true;
 
   const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const norm=v=>(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
@@ -24,7 +24,7 @@
     return {operation,products,sku,complexity,pain,service,magnitude,priority,firstQuestion:'¿Aproximadamente cuántos SKU o productos manejan y el inventario sería de una sola sede o también de almacén?'};
   }
 
-  function cardHTML(lead){const p=profileFor(lead);return `<div class="block prospectContextCard" data-prospect-context data-lead-id="${esc(lead.id)}"><div class="prospectContextHead"><div><span class="contextEyebrow">Referencia comercial</span><h3>Contexto del prospecto</h3></div><span class="contextPriority">Prioridad ${esc(p.priority)}</span></div><div class="contextNotice"><b>Estimación AGP:</b> la magnitud y los SKU son aproximaciones según el rubro; deben confirmarse con el prospecto.</div><div class="contextGrid"><div class="contextItem"><span>Tipo de operación</span><b>${esc(p.operation)}</b></div><div class="contextItem"><span>Magnitud probable</span><b>${esc(p.magnitude)}</b></div><div class="contextItem"><span>SKU estimados</span><b>${esc(p.sku)}</b></div><div class="contextItem"><span>Complejidad</span><b>${esc(p.complexity)}</b></div></div><div class="contextSection"><span>Productos que podría manejar</span><p>${esc(p.products)}</p></div><div class="contextSection"><span>Problema probable</span><p>${esc(p.pain)}</p></div><div class="contextSection contextOpportunity"><span>Servicio AGP que mejor encaja</span><p>${esc(p.service)}</p></div><div class="contextQuestion"><span>Pregunta clave antes de cotizar</span><b>${esc(p.firstQuestion)}</b></div></div>`}
+  function cardHTML(lead){const p=profileFor(lead);return `<section class="prospectContextCard" data-prospect-context data-lead-id="${esc(lead.id)}"><div class="prospectContextHead"><div><span class="contextEyebrow">Referencia comercial</span><h3>Contexto del prospecto</h3></div><span class="contextPriority">Prioridad ${esc(p.priority)}</span></div><div class="contextNotice"><b>Estimación AGP:</b> la magnitud y los SKU son aproximaciones según el rubro; deben confirmarse con el prospecto.</div><div class="contextGrid"><div class="contextItem"><span>Tipo de operación</span><b>${esc(p.operation)}</b></div><div class="contextItem"><span>Magnitud probable</span><b>${esc(p.magnitude)}</b></div><div class="contextItem"><span>SKU estimados</span><b>${esc(p.sku)}</b></div><div class="contextItem"><span>Complejidad</span><b>${esc(p.complexity)}</b></div></div><div class="contextSection"><span>Productos que podría manejar</span><p>${esc(p.products)}</p></div><div class="contextSection"><span>Problema probable</span><p>${esc(p.pain)}</p></div><div class="contextSection contextOpportunity"><span>Servicio AGP que mejor encaja</span><p>${esc(p.service)}</p></div><div class="contextQuestion"><span>Pregunta clave antes de cotizar</span><b>${esc(p.firstQuestion)}</b></div></section>`}
 
   function currentLead(modal){
     const title=modal.querySelector('.sheetTop h2, h2');
@@ -38,7 +38,7 @@
     if(!modal||!modal.childElementCount)return;
     const lead=currentLead(modal);if(!lead)return;
     const existing=modal.querySelector('[data-prospect-context]');
-    if(existing?.dataset.leadId===lead.id)return;
+    if(existing?.dataset.leadId===lead.id){existing.classList.remove('strict89Hide');return}
     existing?.remove();
     const top=modal.querySelector('.sheetTop');
     if(top){top.insertAdjacentHTML('afterend',cardHTML(lead));return}
@@ -49,7 +49,7 @@
     const modal=document.getElementById('modal');if(!modal)return;
     let scheduled=false;
     const schedule=()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;inject()})};
-    new MutationObserver(schedule).observe(modal,{childList:true,subtree:true,characterData:true});
+    new MutationObserver(schedule).observe(modal,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['class']});
     const detail=document.getElementById('detail');
     detail?.addEventListener('toggle',schedule);
     document.addEventListener('click',e=>{if(e.target.closest('[onclick*="openLead"],button,a'))setTimeout(schedule,0)},true);
