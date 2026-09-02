@@ -25,6 +25,20 @@ jobs:
         uses: actions/checkout@v4
       - name: Validate lead batch JavaScript
         run: node --check leads-batch-v150.js
+      - name: Validate final lead count
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('fs'), vm=require('vm');
+          const ctx={window:{},console,document:{readyState:'complete',write(){}}};
+          vm.createContext(ctx);
+          for(const f of ['leads.js','leads-reset-v42.js','leads-strict-v41.js','leads-batch-v126.js','leads-batch-v126b.js','leads-logistics-v130.js','leads-batch-v150.js']){
+            vm.runInContext(fs.readFileSync(f,'utf8'),ctx,{filename:f});
+            console.log(f, Array.isArray(ctx.window.INVENTORY_LEADS)?ctx.window.INVENTORY_LEADS.length:'no leads');
+          }
+          console.log('batch',ctx.window.AGP_LEAD_BATCH_150);
+          if(!ctx.window.AGP_LEAD_BATCH_150 || ctx.window.AGP_LEAD_BATCH_150.added!==150) process.exit(2);
+          NODE
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
