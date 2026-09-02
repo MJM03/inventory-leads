@@ -1,25 +1,25 @@
 (()=>{
-if(window.__AGP_CONTACT_DISPLAY_V128)return;window.__AGP_CONTACT_DISPLAY_V128=true;
+if(window.__AGP_CONTACT_DISPLAY_V129)return;window.__AGP_CONTACT_DISPLAY_V129=true;
 const leads=()=>window.INVENTORY_LEADS||[];
+const confirmedIds=new Set(['palieres-stiven','nsi-importador','marzano','oimi','soluciones-dican','grupo-goimsa']);
+const digits=v=>(v||'').replace(/\D/g,'');
+const fmt=v=>{let n=digits(v).replace(/^51(?=9\d{8}$)/,'');return /^9\d{8}$/.test(n)?`${n.slice(0,3)} ${n.slice(3,6)} ${n.slice(6)}`:(v||'').trim()};
 function idFromCard(card){const b=card.querySelector('[onclick*="openLead"]');return b?.getAttribute('onclick')?.match(/openLead\(['"]([^'"]+)/)?.[1]||''}
+function isVerified(l){return !!(l.whatsappVerified||confirmedIds.has(l.id)||(/whatsapp/i.test(l.source||'')&&!l.whatsappAssumed));}
+function chipText(chip,text){if(!chip)return;const svg=chip.querySelector('svg')?.cloneNode(true);chip.textContent=text;if(svg)chip.prepend(svg);}
 function paint(card){
-  const id=idFromCard(card),l=leads().find(x=>x.id===id);if(!l)return;
-  const contact=card.querySelector('.contact');if(!contact)return;
-  const wa=(l.whatsapp||'').trim(),phone=(l.phone||'').trim();
-  const chip=card.querySelector('.chip.wa');
-  if(wa){
-    if(chip)chip.childNodes[chip.childNodes.length-1].textContent=' WhatsApp verificado';
-    const icon=contact.querySelector('.waIcon');
-    if(icon && !contact.dataset.contactNumber128){icon.insertAdjacentText('afterend',' '+wa);contact.dataset.contactNumber128='1'}
-    return;
-  }
-  if(chip){
-    const svg=chip.querySelector('svg');chip.textContent='Celular por validar';if(svg)chip.prepend(svg);
-  }
-  const icon=contact.querySelector('.waIcon');
-  if(icon&&phone&&!contact.dataset.contactNumber128){icon.insertAdjacentText('afterend',' '+phone);contact.dataset.contactNumber128='1'}
+ const id=idFromCard(card),l=leads().find(x=>x.id===id);if(!l)return;
+ const contact=card.querySelector('.contact');if(!contact)return;
+ const verified=isVerified(l),number=fmt(verified?(l.whatsapp||l.phone):(l.phone||l.whatsapp));
+ const key=[id,verified?1:0,number,l.address||'',l.email||''].join('|');if(contact.dataset.v129===key)return;
+ chipText(card.querySelector('.chip.wa'),verified?'WhatsApp verificado':'Celular por validar');
+ const parts=[];
+ if(number)parts.push(`💬 ${number}`);
+ if(l.address)parts.push(`📍 ${l.address}`);
+ if(l.email)parts.push(`✉️ ${l.email}`);
+ contact.innerHTML=parts.join('<br>');contact.dataset.v129=key;
 }
 function scan(){document.querySelectorAll('#grid .card').forEach(paint)}
-function boot(){scan();const g=document.getElementById('grid');if(!g)return;new MutationObserver(()=>requestAnimationFrame(scan)).observe(g,{childList:true,subtree:true})}
+function boot(){scan();const g=document.getElementById('grid');if(!g)return;let queued=false;new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;scan()})}).observe(g,{childList:true,subtree:true})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
